@@ -7,6 +7,7 @@ import '../../../models/chat_message.dart';
 
 class ChatController with ChangeNotifier {
   WebSocketChannel? _channel;
+  String? _currentChatUserId;
   String? _accessToken;
   String? _userId;
 
@@ -19,9 +20,14 @@ class ChatController with ChangeNotifier {
   bool get isConnected => _isConnected;
 
   // Connect to WebSocket with authentication
-  Future<void> connect(String accessToken, String userId) async {
-    _accessToken = accessToken;
+  Future<void> connect({
+    required String userId,
+    required String accessToken,
+    required String chatWithUserId,
+  }) async {
     _userId = userId;
+    _accessToken = accessToken;
+    _currentChatUserId = chatWithUserId;
 
     // Connect to your Directus websocket endpoint
     _channel = WebSocketChannel.connect(
@@ -78,27 +84,63 @@ class ChatController with ChangeNotifier {
 
   void _subscribeToMessages() {
     // Subscribe to message creation events
-    final subscribeJson = json.encode({
-      "type": "subscribe",
-      "event": "create",
-      "collection": "chat_messages",
-    });
+    final subscribeJson = json.encode(
+      {
+        "type": "subscribe",
+        "event": "create",
+        "collection": "chat_messages",
+        "filter": {
+          "_or": [
+            {
+              "_and": [
+                {
+                  "sender_id": {"_eq": _userId}
+                },
+                {
+                  "receiver_id": {"_eq": _currentChatUserId}
+                }
+              ]
+            },
+            {
+              "_and": [
+                {
+                  "sender_id": {"_eq": _currentChatUserId}
+                },
+                {
+                  "receiver_id": {"_eq": _userId}
+                }
+              ]
+            }
+          ]
+        }
+      },
+    );
 
     _channel?.sink.add(subscribeJson);
   }
 
   void _handleNewMessage(Map<String, dynamic> data) {
     final newMessage = ChatMessage.fromJson(data, _userId!);
-    _messages.add(newMessage);
-    notifyListeners();
+
+    // Only add messages related to the current chat
+    if ((newMessage.senderId == _userId &&
+        newMessage.receiverId == _currentChatUserId) ||
+        (newMessage.senderId == _currentChatUserId &&
+            newMessage.receiverId == _userId)) {
+      _messages.add(newMessage);
+      notifyListeners();
+    }
   }
 
   // Send a new message
-  Future<void> sendMessage(String content, String receiverId) async {
+  Future<void> sendMessage(String content) async {
     if (!_isConnected || _userId == null) return;
 
     // Create a unique ID for the message
-    final messageId = DateTime.now().millisecondsSinceEpoch.toString();
+    final messageId = DateTime
+        .now()
+        .millisecondsSinceEpoch
+        .toString();
 
     // Create the message object
     final message = ChatMessage(
@@ -106,8 +148,8 @@ class ChatController with ChangeNotifier {
       id: messageId,
       content: content,
       senderId: _userId!,
-      receiverId: receiverId,
       timestamp: DateTime.now(),
+      receiverId: _currentChatUserId!,
     );
 
     // Add to local messages immediately for UI responsiveness

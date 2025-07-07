@@ -31,11 +31,16 @@ class _ChatScreenState extends State<ChatScreen> {
     // In a real app, these would come from your authentication service
     // For demo purposes, we'll use dummy values
     const String dummyToken = 'your-directus-auth-token';
+    const String dummyReceiverId = 'receiver-user-id';
     const String dummyUserId = 'current-user-id';
 
     // Connect WebSocket service
     final chatService = Provider.of<ChatController>(context, listen: false);
-    await chatService.connect(dummyToken, dummyUserId);
+    await chatService.connect(
+      userId:dummyUserId,
+      accessToken:dummyToken,
+      chatWithUserId:dummyReceiverId,
+    );
     await chatService.loadMessages();
 
     setState(() => _isLoading = false);
@@ -55,10 +60,8 @@ class _ChatScreenState extends State<ChatScreen> {
   void _sendMessage() {
     if (_messageController.text.trim().isEmpty) return;
 
-    const String dummyReceiverId = 'receiver-user-id';
-
     final chatService = Provider.of<ChatController>(context, listen: false);
-    chatService.sendMessage(_messageController.text.trim(), dummyReceiverId);
+    chatService.sendMessage(_messageController.text.trim());
 
     _messageController.clear();
     _scrollToBottom();
