@@ -55,8 +55,10 @@ class _ChatScreenState extends State<ChatScreen> {
   void _sendMessage() {
     if (_messageController.text.trim().isEmpty) return;
 
+    const String dummyReceiverId = 'receiver-user-id';
+
     final chatService = Provider.of<ChatController>(context, listen: false);
-    chatService.sendMessage(_messageController.text.trim());
+    chatService.sendMessage(_messageController.text.trim(), dummyReceiverId);
 
     _messageController.clear();
     _scrollToBottom();

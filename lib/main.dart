@@ -16,6 +16,7 @@ class MyApp extends StatelessWidget {
       create: (_) => ChatController(),
       child: MaterialApp(
         title: 'Directus Chat Example',
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
           useMaterial3: true,

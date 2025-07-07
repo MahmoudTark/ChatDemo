@@ -3,6 +3,7 @@ class ChatMessage {
   final String id;
   final String content;
   final String senderId;
+  final String receiverId;
   final DateTime timestamp;
 
   ChatMessage({
@@ -11,6 +12,7 @@ class ChatMessage {
     required this.content,
     required this.senderId,
     required this.timestamp,
+    required this.receiverId,
   });
 
   factory ChatMessage.fromJson(
@@ -19,16 +21,18 @@ class ChatMessage {
       id: json['id'],
       content: json['content'],
       senderId: json['sender_id'],
-      timestamp: DateTime.parse(json['timestamp']),
+      receiverId: json['receiver_id'],
       isMe: json['sender_id'] == currentUserId,
+      timestamp: DateTime.parse(json['timestamp']),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'sender_id': senderId,
       'content': content,
+      'sender_id': senderId,
+      'receiver_id': receiverId,
       'timestamp': timestamp.toIso8601String(),
     };
   }

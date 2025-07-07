@@ -94,7 +94,7 @@ class ChatController with ChangeNotifier {
   }
 
   // Send a new message
-  Future<void> sendMessage(String content) async {
+  Future<void> sendMessage(String content, String receiverId) async {
     if (!_isConnected || _userId == null) return;
 
     // Create a unique ID for the message
@@ -102,11 +102,12 @@ class ChatController with ChangeNotifier {
 
     // Create the message object
     final message = ChatMessage(
-      id: messageId,
-      senderId: _userId!,
-      content: content,
-      timestamp: DateTime.now(),
       isMe: true,
+      id: messageId,
+      content: content,
+      senderId: _userId!,
+      receiverId: receiverId,
+      timestamp: DateTime.now(),
     );
 
     // Add to local messages immediately for UI responsiveness
